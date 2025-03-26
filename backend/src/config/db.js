@@ -1,9 +1,9 @@
-import { sequelize } from 'sequelize';
 import dotenv from 'dotenv';
+import { Sequelize } from 'sequelize';
 
 dotenv.config ();
 
-const sequelize = new sequelize(
+const sequelize = new Sequelize(
     process.env.DB_NAME, // Database name
     process.env.DB_USER, // PostgreSQL username
     process.env.DB_PASS, // PostgreSQL password
