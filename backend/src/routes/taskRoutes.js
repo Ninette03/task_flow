@@ -1,11 +1,13 @@
 import express from "express";
-import { createTask, getTasks } from "../controllers/taskController.js";
+import { createTask, getTask, updateTask, deleteTask } from "../controllers/taskController.js";
 
 const router = express.Router();
 
 // Protect routes with JWT
 
 router.post("/", createTask);
-router.get("/", getTasks);
+router.get("/", getTask);
+router.put("/", updateTask);
+router.delete("/", deleteTask);
 
 export default router;
