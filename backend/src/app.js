@@ -4,6 +4,7 @@ import cors from "cors";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import { googleAuth } from "./controllers/authController.js";
 
 dotenv.config();
 connectDB();
@@ -11,6 +12,8 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+//Google Oauth route
+app.post("api/auth/google", googleAuth);
 
 // Routes
 app.use("/api/auth", authRoutes);
