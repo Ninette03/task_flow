@@ -3,7 +3,7 @@ import Task from "../models/Task.js";
 // Create Task
 export const createTask = async (req, res) => {
   const { title, description } = req.body;
-  const userId = req.user.uid;
+  const userId = req.user?.userId;
 
   try {
     const task = await Task.create({ title, description, userId });
@@ -45,9 +45,9 @@ export const deleteTask = async (req, res) => {
     if (!task) return res.status(404).json({ error: "Task not found" });
 
     await task.destroy();
-    res.status(200).json({ message: "Task deleted" });
+    res.status(204).json({ message: "Task deleted" });
   } catch (error) {
-    res.status(500).json({ error: "Error deleting task" });
+    res.status(500).json({ error: "Error deleting task" });
 
   }
 };

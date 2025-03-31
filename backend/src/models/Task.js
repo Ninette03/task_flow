@@ -16,14 +16,14 @@ const Task = sequelize.define("Task", {
   isCompleted: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
-},
-userId: {
-  type: DataTypes.STRING,
-  references: {
-    model: User,
-    key: "uid",
   },
-},
+  userId: {
+    type: DataTypes.STRING,
+    references: {
+      model: User,
+      key: "uid",
+    },
+  },
 });
 
 User.hasMany(Task, { foreignKey: "userId" });
