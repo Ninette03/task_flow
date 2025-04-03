@@ -12,7 +12,8 @@ const sequelize = new Sequelize(
     {
       host: process.env.DB_HOST || "localhost", // Database host
       dialect: "postgres", // Ensures Sequelize uses PostgreSQL
-      logging: false, // Set to true to log SQL queries
+      logging: false,
+      schema: 'public',
     }
   );
 
