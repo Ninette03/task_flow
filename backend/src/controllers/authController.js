@@ -1,6 +1,8 @@
 import admin from "../config/firebase.js";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const googleAuth = async (req, res) => {
   const { token } = req.body;
@@ -17,8 +19,11 @@ export const googleAuth = async (req, res) => {
     }
 
     // Generate JWT
+    console.log("User ID:", user?.uid);
+    console.log("Email:", email);
+
     const userToken = jwt.sign({ userId: user.uid, email }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
+      expiresIn: "1h",
     });
 
     res.status(200).json({ user, token: userToken });
