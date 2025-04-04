@@ -1,9 +1,14 @@
-import admin from "firebase-admin";
 import dotenv from 'dotenv';
-
 dotenv.config();
-const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+import path from 'path';
+dotenv.config({ path: path.resolve("backend", ".env") });
 
+import admin from "firebase-admin";
+
+if (!process.env.FIREBASE_PRIVATE_KEY) {
+    throw new Error('Missing FIREBASE_PRIVATE_KEY environment variable');
+}
+const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
 //Initializing Firebase Admin
 
