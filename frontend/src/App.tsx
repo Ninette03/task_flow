@@ -1,26 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Provider } from 'react-redux';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AppDispatch, RootState, store } from './app/store';
+import { loginWithGoogle, logoutUser } from './features/auth/authSlice';
+import LandingPage from './pages/LandingPage';
+import DashboardPage from './pages/DashboardPage';
+import PrivateRoute from './components/PrivateRoute';
 
-function App() {
+const App = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    if (!user) {
+      dispatch(loginWithGoogle());
+    }
+  }, [dispatch, user]);
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={
+          <PrivateRoute>
+            <DashboardPage />
+          </PrivateRoute>
+        } />
+      </Routes>
+    </Router>
   );
-}
+};
 
-export default App;
+const AppWrapper = () => {
+  return (
+    <Provider store={store}>
+      <App />
+    </Provider>
+  );
+};
+
+export default AppWrapper;
