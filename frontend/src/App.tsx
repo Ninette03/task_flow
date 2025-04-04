@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppDispatch, RootState, store } from './app/store';
-import { loginWithGoogle, logoutUser } from './features/auth/authSlice';
+import { loginWithGoogle } from './features/auth/authSlice';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
 import PrivateRoute from './components/PrivateRoute';
