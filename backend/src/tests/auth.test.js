@@ -1,8 +1,10 @@
 import { verifyToken } from "../middleware/auth";
 import { sign } from "jsonwebtoken";
-require ('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 describe('Auth Middleware', () => {
+  
     const mockRequest = (token) => ({
       headers: { authorization: `Bearer ${token}` },
     });
@@ -15,6 +17,7 @@ describe('Auth Middleware', () => {
     const next = jest.fn();
     it('should verify a valid token', () => {
         const token = sign({ id: 1 }, process.env.JWT_SECRET);
+        console.log("Generated Token:", token);
         const req = mockRequest(token);
         const res = mockResponse();
     

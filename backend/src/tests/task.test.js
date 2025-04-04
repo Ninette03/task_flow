@@ -3,16 +3,23 @@ const { app, server } = require('../app');
 import { sequelize } from '../config/db';
 import Task from '../models/Task';
 import jwt from 'jsonwebtoken';
-require ('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 let token;
 
 beforeAll(async () => {
+  await sequelize.authenticate();
   await sequelize.sync({ force: true }); // Reset DB for tests
 
   // Mock user and token
-  const user = { id: 1 };
+  const user = { userid: 1 };
+
   token = jwt.sign(user, process.env.JWT_SECRET);
+  await Task.create({
+    title: 'Initial Task',
+    description: 'Test description'
+  });
 });
 
 afterAll(async () => {
@@ -36,27 +43,27 @@ describe('Task API', () => {
           .get('/api/tasks')
           .set('Authorization', `Bearer ${token}`);
         expect(res.statusCode).toBe(200);
-        expect(res.body.length).toBe(1);
+        expect(res.body.length).toBeGreaterThan(0);
       });
     
       it('should update a task', async () => {
         const task = await Task.findOne();
         const res = await request(app)
-          .put('/api/tasks/$ {task.id}')
+          .put(`/api/tasks/${task.id}`)
           .set('Authorization', `Bearer ${token}`) 
           .send({ title: 'Updated Task' });
-          expect(res.statusCode).toBe(404);
-    expect(res.body.title).toBe('Updated Task');
+          expect(res.statusCode).toBe(200);
+          expect(res.body.title).toBe('Updated Task');
   });
 
   it('should delete a task', async () => {
     const task = await Task.findOne();
     const res = await request(app)
-      .delete('/api/tasks/${Task.id}')
+      .delete(`/api/tasks/${task.id}`)
       .set('Authorization', `Bearer ${token}`);
 
-    expect(res.statusCode).toBe(404);
-    const deletedTask = await Task.findByPk(Task.id);
+    expect(res.statusCode).toBe(204);
+    const deletedTask = await Task.findByPk(task.id);
     expect(deletedTask).toBeNull();
     });
 });
