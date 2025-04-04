@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api'; // Replace with your backend URL
+const API_URL = 'https://task-flow-xaku.onrender.com/api';
 
 export const fetchTasks = async (token: string) => {
   const response = await fetch(`${API_URL}/tasks`, {
