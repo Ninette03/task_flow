@@ -23,11 +23,34 @@ const Task = sequelize.define("Task", {
       model: User,
       key: "uid",
     },
+    allowNull: false,  // Tasks must be assigned to someone
+  },
+  createdBy: {  // Track task creator (admin)
+    type: DataTypes.STRING,
+    references: {
+      model: User,
+      key: "uid",
+    },
+    allowNull: false,
   },
 });
 
-User.hasMany(Task, { foreignKey: "userId" });
-Task.belongsTo(User, { foreignKey: "userId" });
+// Relationships
+User.hasMany(Task, { 
+  foreignKey: "assignedTo", 
+  as: "assignedTasks"  // Useful for querying user's tasks
+});
+User.hasMany(Task, {
+  foreignKey: "createdBy",
+  as: "createdTasks"  // Useful for querying tasks created by an admin
+});
+Task.belongsTo(User, { 
+  foreignKey: "assignedTo", 
+  as: "assignee"  // Eager loading: Task.getAssignee()
+});
+Task.belongsTo(User, {
+  foreignKey: "createdBy",
+  as: "creator"  // Eager loading: Task.getCreator()
+});
 
 export default Task;
-
