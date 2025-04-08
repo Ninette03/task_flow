@@ -33,7 +33,7 @@ export const loginWithGoogle = createAsyncThunk(
       const idToken = await result.user.getIdToken();
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/google", 
+        "https://task-flow-xaku.onrender.com/api/auth/google", 
         { token: idToken }
       );
 
@@ -62,7 +62,6 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Add a reducer to clear errors manually if needed
     clearAuthError: (state) => {
       state.error = null;
     }
