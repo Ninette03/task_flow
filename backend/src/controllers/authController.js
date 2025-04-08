@@ -15,14 +15,21 @@ export const googleAuth = async (req, res) => {
     // Check if user exists, else create
     let user = await User.findByPk(uid);
     if (!user) {
-      user = await User.create({ uid, email, name });
+      user = await User.create({
+        uid,
+        email,
+        name,
+        role: 'user' //Default role for new users
+      });
     }
 
     // Generate JWT
-    console.log("User ID:", user?.uid);
-    console.log("Email:", email);
-
-    const userToken = jwt.sign({ userId: user.uid, email }, process.env.JWT_SECRET, {
+    
+    const userToken = jwt.sign({
+      userId: user.uid,
+      email,
+      role: user.role
+    }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
