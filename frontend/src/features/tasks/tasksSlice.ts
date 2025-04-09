@@ -62,11 +62,13 @@ export const addTaskAsync = createAsyncThunk<Task, {
         throw new Error('Unauthorized assignment');
       }
 
-      return await createTask({
+      const requestData = {
         title: taskData.title,
         description: taskData.description,
-        ...(user?.role === 'admin' && { userId: taskData.userId })
-      }, token);
+        ...(user?.role === 'admin' && taskData.userId && { userId: taskData.userId })
+      };
+
+      return await createTask(requestData, token);
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to create task');
     }
