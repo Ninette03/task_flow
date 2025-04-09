@@ -6,7 +6,10 @@ import { AppDispatch, RootState, store } from './app/store';
 import { loginWithGoogle } from './features/auth/authSlice';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import PrivateRoute from './components/PrivateRoute';
+import ProtectedRoute from './components/ProtectedRoute';
+import { UserRole } from './utils/roles';
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +31,11 @@ const App = () => {
           <PrivateRoute>
             <DashboardPage />
           </PrivateRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute requiredRole={UserRole.ADMIN}>
+            <AdminDashboardPage />
+          </ProtectedRoute>
         } />
       </Routes>
     </Router>

@@ -1,12 +1,20 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { createTask, fetchTasks, updateTask, deleteTask } from '../../services/taskService';
-import { AppThunk, RootState } from '../../app/store';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import {
+  fetchTasks,
+  createTask,
+  markTaskComplete,
+  updateTaskAdmin,
+  deleteTask
+} from '../../services/taskService';
+import { RootState } from '../../app/store';
 
 export interface Task {
   id: string;
   title: string;
   description: string;
-  completed: boolean;
+  isCompleted: boolean;
+  userId: string;       // Who the task is assigned to
+  createdBy?: string;   // Who created the task (admin)
   createdAt: string;
 }
 
@@ -22,95 +30,105 @@ const initialState: TasksState = {
   error: null,
 };
 
+// Thunk for fetching tasks (role-aware)
 export const fetchTasksAsync = createAsyncThunk<Task[], void, { state: RootState }>(
   'tasks/fetchTasks',
   async (_, { getState, rejectWithValue }) => {
     try {
-      const token = getState().auth.token;
-      console.log('Current token:', token); // Debug log
+      const { token, user } = getState().auth;
+      if (!token) throw new Error('No authentication token available');
       
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-      
-      const tasks = await fetchTasks(token);
-      return tasks;
+      return await fetchTasks(token, user?.role === 'admin');
     } catch (error) {
-      console.error('Fetch tasks error:', error);
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch tasks');
     }
   }
 );
 
-export const addTaskAsync = createAsyncThunk(
+// Thunk for creating tasks (handles admin assignment)
+export const addTaskAsync = createAsyncThunk<Task, { 
+  title: string; 
+  description: string; 
+  userId?: string 
+}, { state: RootState }>(
   'tasks/addTask',
-  async (task: { title: string; description: string }, { getState, rejectWithValue }) => {
+  async (taskData, { getState, rejectWithValue }) => {
     try {
-      const state = getState() as RootState;
-      const token = state.auth.token;
-      
-      if (!token) {
-        return rejectWithValue('No authentication token');
+      const { token, user } = getState().auth;
+      if (!token) throw new Error('No authentication token available');
+
+      // Regular users can't assign tasks to others
+      if (user?.role !== 'admin' && taskData.userId) {
+        throw new Error('Unauthorized assignment');
       }
 
-      const response = await createTask(task, token);
-      return response;
+      return await createTask({
+        title: taskData.title,
+        description: taskData.description,
+        ...(user?.role === 'admin' && { userId: taskData.userId })
+      }, token);
     } catch (error) {
-      return rejectWithValue('Failed to create task');
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to create task');
     }
   }
 );
 
-export const toggleTaskAsync = createAsyncThunk<Task, string, { state: RootState }>(
-  'tasks/toggleTask',
-  async (taskId: string, { getState, rejectWithValue }) => {
+// Thunk for marking task complete (user-only)
+export const completeTaskAsync = createAsyncThunk<Task, string, { state: RootState }>(
+  'tasks/completeTask',
+  async (taskId, { getState, rejectWithValue }) => {
     try {
-      const state = getState();
-      const token = state.auth.token;
-
-      if (!token) {
-        console.error('Toggle task failed - no auth token');
-        return rejectWithValue('Authentication required');
-      }
-
-      console.log(`Toggling task ${taskId} with token:`, token.substring(0, 10) + '...');
+      const { token } = getState().auth;
+      if (!token) throw new Error('No authentication token available');
       
-      const response = await updateTask(taskId, { completed: true }, token);
-      console.log(`Task ${taskId} toggled successfully`);
-      return response;
-    } catch (error: unknown) {
-      console.error(`Error toggling task ${taskId}:`, error);
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('Failed to toggle task status');
+      return await markTaskComplete(taskId, token);
+    } catch (error) {
+      console.error('Failed to complete task:', error);
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to complete task');
     }
   }
 );
 
+// Thunk for admin task updates
+export const updateTaskAsync = createAsyncThunk<Task, {
+  taskId: string;
+  updates: {
+    title?: string;
+    description?: string;
+    userId?: string;
+    isCompleted?: boolean;
+  }
+}, { state: RootState }>(
+  'tasks/updateTask',
+  async ({ taskId, updates }, { getState, rejectWithValue }) => {
+    try {
+      const { token, user } = getState().auth;
+      if (!token || user?.role !== 'admin') {
+        throw new Error('Admin privileges required');
+      }
+      
+      return await updateTaskAdmin(taskId, updates, token);
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to update task');
+    }
+  }
+);
+
+// Thunk for deleting tasks (admin-only)
 export const deleteTaskAsync = createAsyncThunk<string, string, { state: RootState }>(
   'tasks/deleteTask',
-  async (taskId: string, { getState, rejectWithValue }) => {
+  async (taskId, { getState, rejectWithValue }) => {
     try {
-      const state = getState();
-      const token = state.auth.token;
-
-      if (!token) {
-        console.error('Delete task failed - no auth token');
-        return rejectWithValue('Authentication required');
+      const { token, user } = getState().auth;
+      if (!token || user?.role !== 'admin') {
+        throw new Error('Admin privileges required');
       }
-
-      console.log(`Deleting task ${taskId} with token:`, token.substring(0, 10) + '...');
       
       await deleteTask(taskId, token);
-      console.log(`Task ${taskId} deleted successfully`);
       return taskId;
-    } catch (error: unknown) {
-      console.error(`Error deleting task ${taskId}:`, error);
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('Failed to delete task');
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to delete task');
     }
   }
 );
@@ -123,26 +141,37 @@ const tasksSlice = createSlice({
     builder
       .addCase(fetchTasksAsync.pending, (state) => {
         state.status = 'loading';
+        state.error = null;
       })
-      .addCase(fetchTasksAsync.fulfilled, (state, action: PayloadAction<Task[]>) => {
+      .addCase(fetchTasksAsync.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.tasks = action.payload;
       })
       .addCase(fetchTasksAsync.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message || 'Failed to fetch tasks';
+        state.error = action.payload as string;
       })
-      .addCase(addTaskAsync.fulfilled, (state, action: PayloadAction<Task>) => {
+      .addCase(addTaskAsync.fulfilled, (state, action) => {
         state.tasks.push(action.payload);
       })
-      .addCase(toggleTaskAsync.fulfilled, (state, action: PayloadAction<Task>) => {
-        const index = state.tasks.findIndex((task) => task.id === action.payload.id);
+      .addCase(completeTaskAsync.fulfilled, (state, action) => {
+        const index = state.tasks.findIndex(t => t.id === action.payload.id);
         if (index !== -1) {
           state.tasks[index] = action.payload;
         }
       })
-      .addCase(deleteTaskAsync.fulfilled, (state, action: PayloadAction<string>) => {
-        state.tasks = state.tasks.filter((task) => task.id !== action.payload);
+      .addCase(completeTaskAsync.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+      .addCase(updateTaskAsync.fulfilled, (state, action) => {
+        const index = state.tasks.findIndex(t => t.id === action.payload.id);
+        if (index !== -1) {
+          state.tasks[index] = action.payload;
+        }
+      })
+      .addCase(deleteTaskAsync.fulfilled, (state, action) => {
+        state.tasks = state.tasks.filter(t => t.id !== action.payload);
       });
   },
 });
