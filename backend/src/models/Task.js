@@ -37,7 +37,7 @@ const Task = sequelize.define("Task", {
 
 // Relationships
 User.hasMany(Task, { 
-  foreignKey: "assignedTo", 
+  foreignKey: "userId", 
   as: "assignedTasks"  // Useful for querying user's tasks
 });
 User.hasMany(Task, {
@@ -45,7 +45,7 @@ User.hasMany(Task, {
   as: "createdTasks"  // Useful for querying tasks created by an admin
 });
 Task.belongsTo(User, { 
-  foreignKey: "assignedTo", 
+  foreignKey: "userId", 
   as: "assignee"  // Eager loading: Task.getAssignee()
 });
 Task.belongsTo(User, {
