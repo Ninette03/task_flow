@@ -2,6 +2,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { signInWithPopup, signOut, UserCredential } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase/firebaseConfig";
 import axios from "axios";
+import { UserRole } from "../../utils/roles";
+import { jwtDecode } from "jwt-decode";
 
 interface AuthState {
   token: string | null;
@@ -15,8 +17,10 @@ const loadInitialState = () => {
   const token = localStorage.getItem('token');
   const user = localStorage.getItem('user');
   
+  const decodedToken = token ? jwtDecode(token) : null;
+
   return {
-    token: token ? JSON.parse(token) : null,
+    token: token || null,
     user: user ? JSON.parse(user) : null,
     loading: false,
     error: null,
@@ -37,11 +41,17 @@ export const loginWithGoogle = createAsyncThunk(
         { token: idToken }
       );
 
+      // Ensure user has a role, default to USER if not provided
+      const userData = response.data.user;
+      if (!userData.role) {
+        userData.role = UserRole.USER;
+      }
+
       // Store in localStorage
       localStorage.setItem('token', JSON.stringify(response.data.token));
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('user', JSON.stringify(userData));
 
-      return response.data;
+      return { token: response.data.token, user: userData };
     } catch (error) {
       if (axios.isAxiosError(error)) {
         return rejectWithValue(error.response?.data?.message || error.message);
@@ -62,6 +72,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+
     clearAuthError: (state) => {
       state.error = null;
     }
