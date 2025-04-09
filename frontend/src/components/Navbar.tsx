@@ -6,7 +6,7 @@ import { Logout, Dashboard, Settings } from "@mui/icons-material";
 import { 
   AppBar, 
   Toolbar, 
-  Typography,  
+  Typography, 
   Box, 
   IconButton, 
   Menu, 
