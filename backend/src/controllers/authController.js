@@ -13,7 +13,7 @@ export const googleAuth = async (req, res) => {
     const { uid, email, name } = decodedToken;
 
     // Check if user exists, else create
-    let user = await User.findByPk(uid);
+    let user = await User.findOne({ where: { uid } });
     if (!user) {
       user = await User.create({
         uid,
