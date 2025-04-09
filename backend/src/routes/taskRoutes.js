@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Admin routes
 
-router.post("/", verifyToken, isAdmin, createTask);
+router.post("/", verifyToken, createTask);
 router.get("/admin", verifyToken, isAdmin, getAllTasks);
 router.put("/:id", verifyToken, isAdmin, updateTask);
 router.delete("/:id", verifyToken, isAdmin, deleteTask);
