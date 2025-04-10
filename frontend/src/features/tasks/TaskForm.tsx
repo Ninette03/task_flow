@@ -19,15 +19,17 @@ import { motion } from 'framer-motion';
 const TaskForm = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  console.log('Current user:', user);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedUserId, setAssignedUserId] = useState('');
 
   // Mock users - replace with actual user fetch from your backend
   const availableUsers = [
-    { id: 'user1', email: 'user1@example.com' },
-    { id: 'user2', email: 'user2@example.com' },
+    { id: 'ZnNdfXcOJnctUCGu37vVri09rCI2', email: 'n.agatesi@alustudent@gmail.com' },
+    { id: 'GxKh5ZdxkAMJdSHtIQYQY7i7SgS2', email: 'karitaninette@gmail.com' },
   ];
+  console.log(availableUsers);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +44,7 @@ const TaskForm = () => {
       setAssignedUserId('');
     }
   };
-
+  
   return (
     <Box 
       component={motion.form}
@@ -110,7 +112,7 @@ const TaskForm = () => {
           }}
         />
 
-        {user?.role === 'admin' && (
+        {true && (
           <>
             <Divider sx={{ my: 1 }} />
             <FormControl fullWidth>

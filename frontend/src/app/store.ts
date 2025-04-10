@@ -1,18 +1,22 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import authReducer from '../features/auth/authSlice';
 import tasksReducer from '../features/tasks/tasksSlice';
+import { combineReducers } from '@reduxjs/toolkit';
+
+const rootReducer = combineReducers({
+  auth: authReducer,
+  tasks: tasksReducer,
+});
+
+export type RootState = ReturnType<typeof rootReducer>;
 
 export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    tasks: tasksReducer,
-  },
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({
     serializableCheck: false
   }),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -20,3 +24,5 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   unknown,
   Action<string>
 >;
+
+export default rootReducer;
